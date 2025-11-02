@@ -101,8 +101,15 @@ describe('Edge Cases', () => {
     expect(infinite).toBeObject()
   })
 
-  it('2. handle weird scopes.', () => {
+  it('2. should handle weird scopes.', () => {
     const { Err } = err.enum({ scope: 'global:global:global' })
     expect(Err.key).toBe('global:Err')
+  })
+
+  it('3. should be able to display complex items', () => {
+    const { Err } = err.enum({ scope: 'weird-scope' })
+    expect(Err.new('example', { userId: 123 }).message).toEqual(
+      '[weird-scope] Err: example {"userId":123}'
+    )
   })
 })
