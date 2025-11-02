@@ -5,7 +5,7 @@ import { err } from '@/index'
 //  Basic
 // ================================================================================
 
-describe('Basic', () => {
+describe('Basic Usage', () => {
   it('1. should be able to define basic errors', () => {
     const { BasicError } = err.enum()
     const error = new BasicError('test message')
@@ -54,6 +54,12 @@ describe('Basic', () => {
     expect(Order2.new().scopeIndex).toBe(2)
     expect(Order3.new().scopeIndex).toBe(3)
   })
+
+  it('6. should reuse same class for duplicate access', () => {
+    const errors1 = err.enum({ scope: 'reuse-test' })
+    const errors2 = err.enum({ scope: 'reuse-test' })
+    expect(errors1.SameError).toBe(errors2.SameError) // Same class reference
+  })
 })
 
 // ================================================================================
@@ -84,10 +90,9 @@ describe('Static Methods', () => {
   it('3. can use static is method as type-guard ', () => {
     const { TestError } = err.enum({ scope: 'static-3' })
     const e = new TestError() as unknown
-    expect(TestError.match(e)).toBe(true) // use as type guard
-    expect(TestError.match(e, () => 123)).toBe(123) // use to return
-    expect(TestError.match(null)).toBe(false)
-    expect(TestError.match(null, () => true)).toBe(undefined)
+    expect(TestError.is(e)).toBe(true) // use as type guard
+    expect(TestError.is(null)).toBe(false)
+    expect(TestError.is(null)).toBe(undefined)
   })
 })
 
