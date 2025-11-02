@@ -47,23 +47,41 @@ describe('Basic', () => {
 // ================================================================================
 
 describe('Static Methods', () => {
-  it('can call static throw method', () => {
+  it('1. can call static throw method', () => {
     const { TestError } = err.enum()
     expect(() => TestError.throw('error!')).toThrow(TestError)
   })
-  it('can use static is method as type-guard ', () => {
+
+  it('2. can use static is method as type-guard ', () => {
     const { TestError } = err.enum()
     const err1 = new TestError()
     const err2 = new Error()
     expect(TestError.is(err1)).toBe(true)
     expect(TestError.is(err2)).toBe(false)
-
     try {
       throw err1
     } catch (e) {
       if (TestError.is(e)) {
         expect(e.message).toBe('TestError (code: 2)')
       }
+    }
+  })
+
+  it('3. can use static is method as type-guard ', () => {
+    const { TestError } = err.enum({ scope: 'static-3' })
+    const err1 = new TestError()
+    try {
+      throw err1
+    } catch (e) {
+      expect(TestError.match(e)).toBeTrue()
+      expect(TestError.match(e, () => 123)).toBe(123)
+      // just to check the types
+      const output = TestError.match(e, (err) => {
+        expect(err.scope).toBe('static-3')
+        return 'ok'
+      })
+
+      expect(output).toBe('ok')
     }
   })
 })

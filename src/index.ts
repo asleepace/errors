@@ -11,11 +11,19 @@ export class Exception extends Error {
    * If the provided argument e is an instance of this class,
    * then the callback will be triggerd.
    */
+  public static match<T>(e: unknown): e is ExcpInstance
   public static match<T>(
     e: unknown,
-    callback?: (err: ExcpInstance) => T
-  ): T | void {
-    if (e instanceof Exception) return callback?.(e as any)
+    callback: (err: ExcpInstance) => T
+  ): T | void
+  public static match<T>(e: unknown, callback?: (err: ExcpInstance) => T): any {
+    if (e instanceof Exception) {
+      if (!callback) return true
+      return callback?.(e as any)
+    } else {
+      if (callback) return undefined
+      return false
+    }
   }
 
   /**
