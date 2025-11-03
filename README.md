@@ -52,7 +52,7 @@ function example(request: Request) {
 
 ## Types
 
-If you have the `tsconfig.json` setting `"no"
+If you have the `tsconfig.json` setting `"noUncheckedIndexedAccess": true` enabled, then you can explicitly declare which errors should be present like so:
 
 ```ts
 const e = Exception.enum<['ErrorOne', 'ErrorTwo']>()
