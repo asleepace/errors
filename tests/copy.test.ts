@@ -49,7 +49,6 @@ describe('Static Cast and Copy Methods', () => {
     const { ApiError } = Exception.enum({ label: 'copy-1' })
     const original = new ApiError('test message')
     const copy = ApiError.from(original)
-
     expect(copy).toBeInstanceOf(ApiError)
     expect(copy).not.toBe(original) // Different reference
     expect(copy.message).toBe(original.message + ' (copy.test.ts)')
@@ -60,7 +59,6 @@ describe('Static Cast and Copy Methods', () => {
     const { ApiError } = Exception.enum({ label: 'copy-2' })
     const original = new ApiError('with stack')
     const copy = ApiError.from(original)
-
     expect(copy.stack).toBeDefined()
     expect(copy.stack).toBe(original.stack)
   })
@@ -70,7 +68,6 @@ describe('Static Cast and Copy Methods', () => {
     const rootCause = new Error('root cause')
     const original = new ApiError('wrapper', rootCause)
     const copy = ApiError.from(original)
-
     expect(copy.cause).toBe(rootCause)
   })
 })

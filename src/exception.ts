@@ -1,11 +1,7 @@
 export type ExcpClass = typeof Exception
 export type ExcpInstance = InstanceType<ExcpClass>
 
-export type ExcpTemplateNames =
-  | '$badge-name'
-  | '$error-name'
-  | '$error-message'
-  | '$file-name'
+export type ExcpTemplateNames = '$label' | '$error' | '$message' | '$file'
 
 export type ExcpConf = {
   template: string[]
@@ -17,12 +13,7 @@ export type ExcpConf = {
 // ======================= globals =======================
 
 const globalConfig: ExcpConf = {
-  template: [
-    '[$badge-name] ',
-    '$error-name',
-    ': $error-message',
-    ' ($file-name)',
-  ],
+  template: ['[$label] ', '$error', ': $message', ' ($file)'],
   maxScopedDefs: 100,
   encoding: 'json',
   delimiter: ' ',
@@ -188,21 +179,16 @@ export function defineScopedExcption(options: {
       super(...args)
       this.originalMessage = this.message
       this.message = interpolateTemplate({
-        '$badge-name': this.label,
-        '$error-message': this.message,
-        '$error-name': options.errorName,
-        '$file-name': this.fileName,
+        $label: this.label,
+        $message: this.message,
+        $error: options.errorName,
+        $file: this.fileName,
       })
     }
   }
 
   scope.set(options.errorName, ScopedException)
   return ScopedException
-}
-
-export type MatchClause<T> = {
-  is(item: unknown): boolean
-  from(item: unknown): T
 }
 
 // ======================= base class =======================
@@ -374,7 +360,9 @@ export class Exception extends Error {
   }
 
   /**
-   * Creates an identical copy of this instance.
+   * Creates an identical* copy of this instance.
+   *
+   * @note stack info might be slightly different.
    */
   public clone(): this {
     return this.ctor.from(this) as this
