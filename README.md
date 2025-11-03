@@ -120,7 +120,7 @@ The debug output will look someting like the following:
 As you can see the message also contains a more detailed view of what happened,
 which can be customized via a template as well. (check source code)
 
-More docs coming soon...
+More docs coming soon, but time for sleep...
 
 ## Contributing
 
