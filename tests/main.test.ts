@@ -11,7 +11,7 @@ describe('Basic Usage', () => {
     const error = new BasicError('test message')
     expect(error).toBeInstanceOf(BasicError)
     expect(error).toBeInstanceOf(Exception)
-    expect(error.message).toBe('[basic-1] BasicError: test message')
+    expect(error.message).toBe('[basic-1] BasicError: test message (main.test.ts)')
   })
 
   it('2. should be able to define with scopes', () => {
@@ -27,15 +27,19 @@ describe('Basic Usage', () => {
     const { BasicError } = Exception.enum({ label: 'basic-3.1' })
     const e1 = new BasicError('with message')
     const e2 = new BasicError() // without message
-    expect(e1.message).toBe('[basic-3.1] BasicError: with message')
-    expect(e2.message).toBe('[basic-3.1] BasicError') // should just be name
+    expect(e1.message).toBe(
+      '[basic-3.1] BasicError: with message (main.test.ts)'
+    )
+    expect(e2.message).toBe('[basic-3.1] BasicError (main.test.ts)') // should just be name
     const { ScopeError } = Exception.enum({
       label: 'basic-3.2',
     })
     const e3 = new ScopeError('with message')
     const e4 = new ScopeError()
-    expect(e3.message).toBe('[basic-3.2] ScopeError: with message')
-    expect(e4.message).toBe('[basic-3.2] ScopeError')
+    expect(e3.message).toBe(
+      '[basic-3.2] ScopeError: with message (main.test.ts)'
+    )
+    expect(e4.message).toBe('[basic-3.2] ScopeError (main.test.ts)')
   })
 
   it('4. should be debuggable', () => {
@@ -82,7 +86,7 @@ describe('Static Methods', () => {
       throw err1
     } catch (e) {
       if (TestError.is(e)) {
-        expect(e.message).toBe('[static-2] TestError')
+        expect(e.message).toBe('[static-2] TestError (main.test.ts)')
       }
     }
   })

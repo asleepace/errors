@@ -10,7 +10,7 @@ describe('Static Cast and Copy Methods', () => {
     const { ApiError } = Exception.enum({ label: 'cast-1' })
     const err = ApiError.cast('timeout')
     expect(err).toBeInstanceOf(ApiError)
-    expect(err.message).toBe('[cast-1] ApiError: timeout')
+    expect(err.message).toBe('[cast-1] ApiError: timeout (copy.test.ts)')
   })
 
   it('2. should cast native Error preserving cause', () => {
@@ -18,7 +18,7 @@ describe('Static Cast and Copy Methods', () => {
     const nativeErr = new Error('failed')
     const err = ApiError.cast(nativeErr)
     expect(err).toBeInstanceOf(ApiError)
-    expect(err.message).toBe('[cast-2] ApiError: failed')
+    expect(err.message).toBe('[cast-2] ApiError: failed (copy.test.ts)')
     expect(err.cause).toBe(nativeErr)
   })
 
@@ -27,7 +27,7 @@ describe('Static Cast and Copy Methods', () => {
     const errorLike = { message: 'bad request', code: 400 }
     const err = ApiError.cast(errorLike)
     expect(err).toBeInstanceOf(ApiError)
-    expect(err.message).toBe('[cast-3] ApiError: bad request')
+    expect(err.message).toBe('[cast-3] ApiError: bad request (copy.test.ts)')
   })
 
   it('4. should cast primitives', () => {
@@ -52,7 +52,7 @@ describe('Static Cast and Copy Methods', () => {
 
     expect(copy).toBeInstanceOf(ApiError)
     expect(copy).not.toBe(original) // Different reference
-    expect(copy.message).toBe(original.message)
+    expect(copy.message).toBe(original.message + ' (copy.test.ts)')
     expect(copy.name).toBe(original.name)
   })
 

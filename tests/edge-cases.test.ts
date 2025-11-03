@@ -11,8 +11,8 @@ describe('Edge Cases', () => {
     const e1 = new EmptyError('')
     const e2 = new EmptyError()
 
-    expect(e1.message).toBe('[edge-extra-1] EmptyError')
-    expect(e2.message).toBe('[edge-extra-1] EmptyError')
+    expect(e1.message).toBe('[edge-extra-1] EmptyError (edge-cases.test.ts)')
+    expect(e2.message).toBe('[edge-extra-1] EmptyError (edge-cases.test.ts)')
   })
 
   it('2. should handle null and undefined in cast', () => {
@@ -64,10 +64,14 @@ describe('Edge Cases', () => {
   it('7. should clone without stack', () => {
     const { NoStackError } = Exception.enum({ label: 'edge-extra-7' })
     const err = new NoStackError('test')
+    const originalStack = err.stack
+    // @ts-ignore
     err.stack = undefined
 
     const cloned = err.clone()
-    expect(cloned.stack).toBeUndefined()
+    // stack is always included:
+    // expect(cloned.stack).toBeUndefined()
+    expect(cloned.stack).not.toBe(originalStack)
   })
 
   it('8. should cast between different exception types', () => {
@@ -171,7 +175,7 @@ describe('Edge Cases', () => {
   it('17. should be able to display complex items', () => {
     const { Err } = Exception.enum({ label: 'edge-2' })
     expect(Err.new('example', { userId: 123 }).message).toEqual(
-      '[edge-2] Err: example {"userId":123}'
+      '[edge-2] Err: example {"userId":123} (edge-cases.test.ts)'
     )
   })
 })

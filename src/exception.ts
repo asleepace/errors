@@ -1,6 +1,61 @@
 export type ExcpClass = typeof Exception
 export type ExcpInstance = InstanceType<ExcpClass>
 
+export type ExcpTemplateNames =
+  | '$badge-name'
+  | '$error-name'
+  | '$error-message'
+  | '$file-name'
+
+export type ExcpConf = {
+  template: string[]
+  maxScopedDefs: number
+  encoding: 'json' | 'basic'
+  delimiter: string
+}
+
+// ======================= globals =======================
+
+const globalConfig: ExcpConf = {
+  template: [
+    '[$badge-name] ',
+    '$error-name',
+    ': $error-message',
+    ' ($file-name)',
+  ],
+  maxScopedDefs: 100,
+  encoding: 'json',
+  delimiter: ' ',
+}
+
+const globalDefinitions = new Map<string, Map<string, ExcpClass>>()
+const conf = globalConfig
+const defs = globalDefinitions
+
+// ======================= helpers =======================
+
+function interpolateTemplate(
+  vars: Record<ExcpTemplateNames, string | undefined>
+): string {
+  const items = Object.entries(vars)
+  const blocks = [...conf.template]
+    .map((block) => {
+      const replace = items.find(([varKey]) => block.includes(varKey))
+      if (!replace || !replace[1]) return undefined
+      const [placeholder, value] = replace
+
+      return block.replace(placeholder, value)
+    })
+    .filter((item) => item !== undefined)
+    .join('')
+  return blocks
+}
+
+const getScopedDefinitions = (scope: string) => {
+  if (!defs.has(scope)) defs.set(scope, new Map())
+  return globalDefinitions.get(scope)!
+}
+
 /** extract first error or exception instance if provided in args. */
 const getPossibleCause = (...args: any[]): Error =>
   args.find((item) => item instanceof Error || item instanceof Exception)
@@ -28,6 +83,8 @@ const getStackInfo = (stack?: string) => {
 /** helper for safely encode an array of possible objects to a string. */
 function safeEncode(...args: any[]): string {
   try {
+    if (conf.encoding === 'basic') return args.join(conf.delimiter)
+
     return args
       .map((item) => {
         if (!item) return item
@@ -36,17 +93,8 @@ function safeEncode(...args: any[]): string {
       })
       .join(' ')
   } catch (e) {
-    return args.join(' ')
+    return args.join(conf.delimiter)
   }
-}
-
-const globalDefinitions = new Map<string, Map<string, ExcpClass>>()
-
-const getScopedDefinitions = (scope: string) => {
-  if (!globalDefinitions.has(scope)) {
-    globalDefinitions.set(scope, new Map())
-  }
-  return globalDefinitions.get(scope)!
 }
 
 const getRelativePath = (fullPath: string) => {
@@ -65,7 +113,7 @@ const getRelativePath = (fullPath: string) => {
   return parts2.slice(i).join('/')
 }
 
-function getAllFrames(stack: string) {
+function getStackFrames(stack: string) {
   return stack
     .split('\n')
     .filter(
@@ -86,7 +134,7 @@ function getAllFrames(stack: string) {
     })
 }
 
-// ======================= define =======================
+// ======================= core logic =======================
 
 export function defineScopedExcption(options: {
   errorName: string
@@ -97,7 +145,7 @@ export function defineScopedExcption(options: {
   /**
    * Use the call site as the scope location.
    */
-  const stackFrames = getAllFrames(dummy.stack ?? '')
+  const stackFrames = getStackFrames(dummy.stack ?? '')
   const lastStackFrame = stackFrames.pop()
 
   const scopeName = lastStackFrame?.relativePath ?? 'global'
@@ -126,35 +174,25 @@ export function defineScopedExcption(options: {
       return obj instanceof ScopedException
     }
 
-    static override throw(...args: any[]): never {
-      throw new this(...args)
-    }
-
     // instance properties ...
 
     public override name: string = options.errorName // NOTE: don't use label here
     public override scopeIndex = ScopedException.scopedIndex
-
     public override get label(): string | undefined {
       return options.labelName
     }
 
+    protected originalMessage: string
+
     constructor(...args: any[]) {
       super(...args)
-      // format message like so:
-      // TestError (code: 2)
-      // TestError (code: 2): A message.
-      const components: string[] = []
-
-      if (this.label) {
-        components.push(`[${this.label}] `)
-      }
-
-      components.push(this.name)
-
-      this.message && components.push(`: ${this.message}`)
-      // NOTE: Important to set the message here.
-      this.message = components.join('')
+      this.originalMessage = this.message
+      this.message = interpolateTemplate({
+        '$badge-name': this.label,
+        '$error-message': this.message,
+        '$error-name': options.errorName,
+        '$file-name': this.fileName,
+      })
     }
   }
 
@@ -167,12 +205,40 @@ export type MatchClause<T> = {
   from(item: unknown): T
 }
 
+// ======================= base class =======================
+
 /**
- * Base exception class which all other errors inherit from.
+ * ## Exception
+ *
+ * Base exception class which extends the built-in `Error` object.
+ *
+ * ```ts
+ * // quickly define errors
+ * const {
+ *  CustomError,
+ *  AnotherOne,
+ * } = Exception.enum()
+ *
+ * // each instance extends the built-in error types
+ * const err = new CustomError()
+ * console.log(err instanceof Error) // true
+ * console.log(err instanceof Exception) // true
+ *
+ * // can be called with multiple arguments
+ * throw new AnotherOne('uh oh!', 67, { userId: 123 })
+ *
+ * // includes several quality of like helpers
+ * try {
+ *  throw CustomError('example')
+ * } catch (e: unknown) {
+ *  if (CustomError.is(e)) {
+ *    console.log(e.message) // type-safe!
+ *  }
+ * }
+ * ```
+ *
  */
 export class Exception extends Error {
-  static MAX_SCOPED_DEFS: number = 100
-
   /**
    * Cast anything into an instance of this Exception type.
    */
@@ -226,6 +292,9 @@ export class Exception extends Error {
     return instance
   }
 
+  /**
+   * Define custom errors in an enumeration like style.
+   */
   static enum<Keys extends string[] = string[]>(
     options: { label?: string } = {}
   ) {
@@ -233,7 +302,8 @@ export class Exception extends Error {
       get: (target, errorName) => {
         /** Handle special properties here... */
         if (typeof errorName === 'symbol') return target[errorName as any]
-        if (errorName === 'length') return Exception.MAX_SCOPED_DEFS
+        /** Since our proxy object is an array we should return the length. */
+        if (errorName === 'length') return conf.maxScopedDefs
         /** Otherwise return a new error definition. */
         return defineScopedExcption({ errorName, labelName: options.label })
       },
@@ -288,13 +358,10 @@ export class Exception extends Error {
       name: this.name,
       message: this.message,
     }
-
     const stackInfo = getStackInfo(this.stack)
-
     if (!verbose && stackInfo?.fileName) {
       entries['fileName'] = stackInfo.fileName
     }
-
     if (verbose) {
       entries['stackInfo'] = stackInfo ?? this.stack
       entries['timestamp'] = new Date().toLocaleString('en-US', {
