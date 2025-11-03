@@ -13,6 +13,7 @@ const {
   404: NotFound,
   401: NotAuthorized,
   500: InternalServerError,
+  scope,
 } = Exception.enum({ label: 'http' })
 
 function example(request: Request) {
@@ -21,7 +22,7 @@ function example(request: Request) {
   } catch (e: unknown) {
     console.log(e instanceof Error) // true
     console.log(e instanceof NotFound) // true
-    return http.match(e).transform({})
+    return NotFound.is(e)?.message ?? 'unknown error'
   }
 }
 ```
