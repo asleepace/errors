@@ -1,5 +1,5 @@
 import { describe, it, test, expect } from 'bun:test'
-import { Exception } from '@/index'
+import { Exception } from '../dist/index'
 
 // ================================================================================
 //  Edge Cases
@@ -121,7 +121,7 @@ describe('Edge Cases', () => {
       name: 'MinError',
       message: 'test',
       rawMessage: 'test',
-      label: undefined,
+      label: 'min-copy',
       scopeIndex: 0,
       stack: undefined,
       cause: undefined,

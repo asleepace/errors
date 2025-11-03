@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    
+    // Explicitly support import.meta
+    "module": "ES2022",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    
+    // Override bundler mode for declaration generation
+    "moduleResolution": "node"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["tests/**/*", "**/*.test.ts", "node_modules", "dist"]
+}

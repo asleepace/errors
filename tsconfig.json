@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
     // Environment setup & latest features
-    "lib": ["ESNext"],
-    "target": "ESNext",
-    "module": "ESNext",
+    "lib": ["ES2022"],
+    "target": "ES2022",
+    "module": "ES2022",
     "moduleDetection": "force",
-    "jsx": "Preserve",
+    "jsx": "preserve",
     "allowJs": true,
 
     // Bundler mode
@@ -34,22 +34,21 @@
     // Bun types
     "types": ["bun-types"],
 
-    // Path aliases (optional but useful)
+    // Path aliases
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@/tests/*": ["./tests/*"]
     },
 
-    // Some stricter flags (you had these disabled)
+    // Relaxed flags
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false
   },
   "include": [
     "src/**/*",
-    "tests/**/*",
-    "*.ts"
+    "tests/**/*"
   ],
   "exclude": [
     "node_modules",

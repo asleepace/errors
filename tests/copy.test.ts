@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test'
-import { Exception } from '@/index'
+import { Exception } from '../dist/index'
 
 // ================================================================================
 //  Static Cast and Copy Methods
