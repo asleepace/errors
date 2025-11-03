@@ -42,5 +42,6 @@ describe('Static Cast and Copy Methods', () => {
     expect(scope.keys().join(', ')).toBe('404, 401, 500')
     const err = new NotFound()
     expect(scope.match(err)?.code).toBe(404)
+    expect(scope.match(err)?.into(() => true)).toBe(true)
   })
 })

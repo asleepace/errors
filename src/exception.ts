@@ -373,10 +373,11 @@ export class Exception extends Error {
     })
   }
 
-  public transform<T>(
-    callback: (this: typeof this, excp: typeof this) => T
-  ): T {
-    return callback.call(this, this)
+  /**
+   * Transform an exception into a different data type.
+   */
+  public into<T>(transformFn: (excp: typeof this) => T): T {
+    return transformFn(this)
   }
 
   /**
