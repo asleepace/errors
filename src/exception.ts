@@ -172,11 +172,15 @@ export function defineScopedExcption(options: {
     public override get label(): string | undefined {
       return options.labelName
     }
-
     protected originalMessage: string
+
+    /** @note code is only automatically set when destructuring via index number. */
+    public override code: number | undefined = undefined
 
     constructor(...args: any[]) {
       super(...args)
+      const code = Number(this.name)
+      this.code = isNaN(code) ? this.code : code
       this.originalMessage = this.message
       this.message = interpolateTemplate({
         $label: this.label,
@@ -284,16 +288,44 @@ export class Exception extends Error {
   static enum<Keys extends string[] = string[]>(
     options: { label?: string } = {}
   ) {
+    const localScope = new Map<string, ExcpClass>()
+
+    let scope = {
+      label: options.label,
+      keys() {
+        return Array.from(localScope.keys())
+      },
+      defs() {
+        return Array.from(localScope.values())
+      },
+      match(e: unknown): ExcpInstance | undefined {
+        const matched = this.defs().find((excp) => excp.is(e))
+        if (matched) return matched.cast(e) as ExcpInstance
+        return undefined
+      },
+    }
+
     return new Proxy([], {
       get: (target, errorName) => {
         /** Handle special properties here... */
         if (typeof errorName === 'symbol') return target[errorName as any]
+
+        if (errorName === 'scope') return scope
+
         /** Since our proxy object is an array we should return the length. */
         if (errorName === 'length') return conf.maxScopedDefs
         /** Otherwise return a new error definition. */
-        return defineScopedExcption({ errorName, labelName: options.label })
+        const def = defineScopedExcption({
+          errorName,
+          labelName: options.label,
+        })
+
+        localScope.set(errorName, def)
+        return def
       },
-    }) as unknown as { [K in Keys[number]]: ExcpClass }
+    }) as unknown as { [K in Keys[number]]: ExcpClass } & {
+      scope: typeof scope
+    }
   }
 
   /**
@@ -319,6 +351,7 @@ export class Exception extends Error {
 
   public override readonly name: string = 'Exception'
   public scopeIndex: number = 0
+  public code: number | undefined = undefined
   public get label(): string | undefined {
     return undefined
   }
